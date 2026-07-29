@@ -49,6 +49,9 @@ Produkce běží: Vercel projekt `coachville-certifikace` (auto-deploy z main), 
 - `src/lib/plan/` — generátor plánů (kap. 8): šablony ACC / upgrade / komplet, proporční přepočet podle cílového data. Šablony v kódu jsou pro MVP zdroj pravdy; DB tabulky `program_templates`/`template_items` se seedují až při napojení.
 - **Výchozí volba čekající na O1:** krátké bez vyhodnocení = poslední dvě krátké ACC fáze (měsíce 9 a 11). Až Aleš rozhodne O1, změnit v `src/lib/plan/sablony.ts` + testech.
 - `src/app/studenti/` + `src/lib/studenti/akce.ts` — modul studentů (F1 onboarding): seznam (verca/meira/admin), založení s živým náhledem plánu (meira/admin), detail s plánem, tlačítko „poslat přihlašovací odkaz". Uvítací e-mail přes Resend (`src/lib/email/`). Úklid testovacích dat: `scripts/smaz-studenta.ts`.
+- `src/lib/nahravky/akce.ts` + `/nahrat/[planItemId]` — upload nahrávek (F2): studentův plán na `/prehled`, signed upload URL → přímý XHR PUT do bucketu `nahravky` (progress bar), povinný checkbox souhlasu (R16), potvrzení založí `recordings` + event + přepne položku na `nahrano` + zařadí `konverze_mp3` do `job_queue`. Bucket zakládá `scripts/vytvor-bucket.ts`.
+- **Upload limity:** Free tarif Supabase = max 50 MB na soubor (bucket i globální strop). Po přechodu na Pro zvednout limit bucketu (`updateBucket`) na ~500 MB. Obnovitelný přenos (TUS) zatím není — při výpadku se upload opakuje celý; zvážit `tus-js-client` ve fázi 2.
+- **Fronta zpracování:** `job_queue` se zatím jen plní; worker (konverze ffmpeg → transkripce → vyhodnocení) se teprve postaví — čeká na vzorové nahrávky a výběr transkripční služby (R37).
 
 ## Konvence
 

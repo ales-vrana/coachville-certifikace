@@ -27,6 +27,18 @@ export const STAV_POLOZKY_POPISKY: Record<string, string> = {
   zruseno: 'Zrušeno',
 }
 
+export const STAV_NAHRAVKY_POPISKY: Record<string, string> = {
+  nahrano: 'Nahráno, čeká na zpracování',
+  zpracovava_se: 'Zpracovává se',
+  vraceno: 'Vráceno (technická vada)',
+  ceka_na_schvaleni: 'Report čeká na schválení',
+  ceka_na_mentora: 'Čeká na přiřazení mentora',
+  schuzka_planovana: 'Schůzka naplánována',
+  dokonceno: 'Schůzka dokončena',
+  report_odeslan: 'Report odeslán',
+  zapocteno: 'Započteno',
+}
+
 export const STAV_STUDENTA_POPISKY: Record<string, string> = {
   aktivni: 'Aktivní',
   pozastaven: 'Pozastaven',

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { ROLE_POPISKY } from '@/lib/popisky'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { StudentuvPlan } from './studentuv-plan'
 
 export default async function PrehledPage() {
   const supabase = await createClient()
@@ -75,14 +76,16 @@ export default async function PrehledPage() {
         </section>
       )}
 
-      <section className="mt-10 rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          {profil.role === 'student'
-            ? 'Tady brzy uvidíte svůj plán nahrávek a termíny.'
-            : 'Další moduly (nahrávky, fronty, mentoři) se právě staví.'}{' '}
-          První ostrá nahrávka: září 2026.
-        </p>
-      </section>
+      {profil.role === 'student' ? (
+        <StudentuvPlan profileId={user.id} />
+      ) : (
+        <section className="mt-10 rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Další moduly (fronty, mentoři, reporty) se právě staví. První ostrá nahrávka: září
+            2026.
+          </p>
+        </section>
+      )}
     </main>
   )
 }

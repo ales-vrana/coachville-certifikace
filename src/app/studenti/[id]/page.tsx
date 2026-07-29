@@ -4,6 +4,7 @@ import { vyzadujRoli } from '@/lib/auth/over-roli'
 import {
   FAZE_POPISKY,
   PROGRAM_POPISKY,
+  STAV_NAHRAVKY_POPISKY,
   STAV_POLOZKY_POPISKY,
   STAV_STUDENTA_POPISKY,
   TYP_POLOZKY_POPISKY,
@@ -35,6 +36,16 @@ export default async function DetailStudentaPage({
     .select('id, poradi, typ, faze, termin, stav')
     .eq('student_id', id)
     .order('poradi')
+
+  const { data: nahravky } = await admin
+    .from('recordings')
+    .select('plan_item_id, nahrano_at, puvodni_nazev, stav, pokus')
+    .eq('student_id', id)
+    .order('nahrano_at', { ascending: false })
+  const posledniNahravka = new Map<string, NonNullable<typeof nahravky>[number]>()
+  for (const n of nahravky ?? []) {
+    if (!posledniNahravka.has(n.plan_item_id)) posledniNahravka.set(n.plan_item_id, n)
+  }
 
   const muzePosilatOdkaz = profil.role === 'meira' || profil.role === 'admin'
 
@@ -81,15 +92,27 @@ export default async function DetailStudentaPage({
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {plan?.map((p) => (
-              <tr key={p.id} className="bg-white dark:bg-zinc-950">
-                <td className="px-4 py-3 text-zinc-400">{p.poradi}.</td>
-                <td className="px-4 py-3">{TYP_POLOZKY_POPISKY[p.typ]}</td>
-                <td className="px-4 py-3">{p.faze ? FAZE_POPISKY[p.faze] : '—'}</td>
-                <td className="px-4 py-3 font-medium">{formatujDatum(p.termin)}</td>
-                <td className="px-4 py-3">{STAV_POLOZKY_POPISKY[p.stav] ?? p.stav}</td>
-              </tr>
-            ))}
+            {plan?.map((p) => {
+              const nahravka = posledniNahravka.get(p.id)
+              return (
+                <tr key={p.id} className="bg-white dark:bg-zinc-950">
+                  <td className="px-4 py-3 text-zinc-400">{p.poradi}.</td>
+                  <td className="px-4 py-3">{TYP_POLOZKY_POPISKY[p.typ]}</td>
+                  <td className="px-4 py-3">{p.faze ? FAZE_POPISKY[p.faze] : '—'}</td>
+                  <td className="px-4 py-3 font-medium">{formatujDatum(p.termin)}</td>
+                  <td className="px-4 py-3">
+                    {nahravka ? STAV_NAHRAVKY_POPISKY[nahravka.stav] : (STAV_POLOZKY_POPISKY[p.stav] ?? p.stav)}
+                    {nahravka && (
+                      <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">
+                        {nahravka.puvodni_nazev ?? 'soubor'} ·{' '}
+                        {formatujDatum(nahravka.nahrano_at.slice(0, 10))}
+                        {nahravka.pokus > 1 ? ` · ${nahravka.pokus}. pokus` : ''}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

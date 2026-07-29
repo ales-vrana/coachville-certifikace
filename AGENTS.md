@@ -24,6 +24,13 @@ Webová aplikace pro správu a AI vyhodnocování koučovacích nahrávek studen
 - `npm run dev` — dev server (Turbopack)
 - `npm run build` — produkční build
 - `npm run lint` — ESLint
+- `npm test` — vitest (unit testy v `src/**/*.test.ts`)
+
+## Stav stavby
+
+- `supabase/migrations/0001_zakladni_schema.sql` — kompletní datový model dle kap. 10 + stavy dle kap. 7. RLS zapnuto bez policies (deny-all); policies dle matice kap. 6 přibudou při napojení Supabase Auth. Migrace se zatím nikam neaplikovala — Supabase projekt ještě neexistuje.
+- `src/lib/plan/` — generátor plánů (kap. 8): šablony ACC / upgrade / komplet, proporční přepočet podle cílového data. Šablony v kódu jsou pro MVP zdroj pravdy; DB tabulky `program_templates`/`template_items` se seedují až při napojení.
+- **Výchozí volba čekající na O1:** krátké bez vyhodnocení = poslední dvě krátké ACC fáze (měsíce 9 a 11). Až Aleš rozhodne O1, změnit v `src/lib/plan/sablony.ts` + testech.
 
 ## Konvence
 

@@ -1,14 +1,8 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { ROLE_POPISKY } from '@/lib/popisky'
 import { createAdminClient } from '@/lib/supabase/admin'
-
-const ROLE_POPISKY: Record<string, string> = {
-  student: 'Student',
-  mentor: 'Mentor',
-  verca: 'Provoz',
-  meira: 'Koordinátorka',
-  admin: 'Administrátor',
-}
+import { createClient } from '@/lib/supabase/server'
 
 export default async function PrehledPage() {
   const supabase = await createClient()
@@ -38,6 +32,8 @@ export default async function PrehledPage() {
     )
   }
 
+  const jeStaff = ['verca', 'meira', 'admin'].includes(profil.role)
+
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
       <header className="flex items-start justify-between gap-4">
@@ -60,10 +56,31 @@ export default async function PrehledPage() {
         </form>
       </header>
 
+      {jeStaff && (
+        <section className="mt-10">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Moduly
+          </h2>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <Link
+              href="/studenti"
+              className="rounded-2xl border border-zinc-200 p-5 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600"
+            >
+              <p className="font-medium text-zinc-900 dark:text-zinc-50">Studenti</p>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                Seznam studentů, zakládání a plány dodávek
+              </p>
+            </Link>
+          </div>
+        </section>
+      )}
+
       <section className="mt-10 rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Přihlášení funguje ✅ — moduly (plány, nahrávky, fronty) se právě staví. První ostrá
-          nahrávka: září 2026.
+          {profil.role === 'student'
+            ? 'Tady brzy uvidíte svůj plán nahrávek a termíny.'
+            : 'Další moduly (nahrávky, fronty, mentoři) se právě staví.'}{' '}
+          První ostrá nahrávka: září 2026.
         </p>
       </section>
     </main>

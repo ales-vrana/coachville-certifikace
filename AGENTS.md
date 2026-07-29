@@ -48,6 +48,7 @@ Produkce běží: Vercel projekt `coachville-certifikace` (auto-deploy z main), 
 - `supabase/migrations/0001_zakladni_schema.sql` — kompletní datový model dle kap. 10 + stavy dle kap. 7. RLS zapnuto bez policies (deny-all); policies dle matice kap. 6 přibudou při napojení Supabase Auth. Migrace se zatím nikam neaplikovala — Supabase projekt ještě neexistuje.
 - `src/lib/plan/` — generátor plánů (kap. 8): šablony ACC / upgrade / komplet, proporční přepočet podle cílového data. Šablony v kódu jsou pro MVP zdroj pravdy; DB tabulky `program_templates`/`template_items` se seedují až při napojení.
 - **Výchozí volba čekající na O1:** krátké bez vyhodnocení = poslední dvě krátké ACC fáze (měsíce 9 a 11). Až Aleš rozhodne O1, změnit v `src/lib/plan/sablony.ts` + testech.
+- `src/app/studenti/` + `src/lib/studenti/akce.ts` — modul studentů (F1 onboarding): seznam (verca/meira/admin), založení s živým náhledem plánu (meira/admin), detail s plánem, tlačítko „poslat přihlašovací odkaz". Uvítací e-mail přes Resend (`src/lib/email/`). Úklid testovacích dat: `scripts/smaz-studenta.ts`.
 
 ## Konvence
 

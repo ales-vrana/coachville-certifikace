@@ -2,6 +2,7 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Json } from '@/lib/supabase/database.types'
 import { formatujTranskript, oznacRole, prepisNahravku } from './transkripce'
+import { vygenerujReport } from './vyhodnoceni'
 
 const BUCKET = 'nahravky'
 
@@ -143,13 +144,46 @@ async function vykonejUlohu(
     }
 
     case 'vyhodnoceni': {
-      const klic = process.env.ANTHROPIC_API_KEY
-      if (!klic) {
-        // Claude API klíč zatím není (checklist kap. 16) — úloha počká,
-        // po dodání klíče se joby ve stavu chyba resetnou.
+      if (!process.env.ANTHROPIC_API_KEY) {
         throw new Error('Čeká na Claude API klíč (ANTHROPIC_API_KEY není nastaven)')
       }
-      throw new Error('AI vyhodnocení se teprve staví (Master Prompt v adminu)')
+      if (polozka.typ === 'kratka_bez_vyhodnoceni') {
+        return 'krátká bez vyhodnocení — nic negeneruji'
+      }
+
+      const { data: transkript } = await admin
+        .from('transcripts')
+        .select('text')
+        .eq('recording_id', nahravka.id)
+        .single()
+      if (!transkript) throw new Error('Transkript ještě neexistuje')
+
+      const vysledek = await vygenerujReport({
+        typPolozky: polozka.typ,
+        transkript: transkript.text,
+      })
+
+      await admin.from('reports').upsert(
+        {
+          recording_id: nahravka.id,
+          prompt_typ: vysledek.promptTyp,
+          prompt_verze: vysledek.promptVerze,
+          obsah_ai: vysledek.obsah,
+          obsah: vysledek.obsah,
+          stav: 'koncept',
+        },
+        { onConflict: 'recording_id' },
+      )
+
+      // dlouhá čeká na přiřazení mentora (F4), krátká na schválení Verčou (F5)
+      const novyStav = polozka.typ === 'dlouha' ? 'ceka_na_mentora' : 'ceka_na_schvaleni'
+      await admin.from('recordings').update({ stav: novyStav }).eq('id', nahravka.id)
+      await zapisUdalost(nahravka.id, 'vyhodnoceni_ok', {
+        prompt_typ: vysledek.promptTyp,
+        prompt_verze: vysledek.promptVerze,
+        model: vysledek.model,
+      })
+      return `report vygenerován (${vysledek.promptTyp} v${vysledek.promptVerze})`
     }
 
     default:

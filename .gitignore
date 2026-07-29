@@ -48,3 +48,4 @@ supabase/.temp/
 
 # Testovací nahrávky — NIKDY necommitovat (soukromé koučovací rozhovory, repo je veřejné)
 Test-nahravky/
+Master-prompt/

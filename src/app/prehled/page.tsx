@@ -72,6 +72,17 @@ export default async function PrehledPage() {
                 Seznam studentů, zakládání a plány dodávek
               </p>
             </Link>
+            {profil.role === 'admin' && (
+              <Link
+                href="/admin"
+                className="rounded-2xl border border-zinc-200 p-5 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600"
+              >
+                <p className="font-medium text-zinc-900 dark:text-zinc-50">Administrace</p>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  Master Prompty a knihovna ICF standardů
+                </p>
+              </Link>
+            )}
           </div>
         </section>
       )}

@@ -26,7 +26,7 @@ export interface RadekPlanu {
   faze: Faze | null
   termin: string
   stav: string
-  nahravka?: { stav: string; nazev: string | null; datum: string; pokus: number }
+  nahravka?: { id: string; stav: string; nazev: string | null; datum: string; pokus: number }
 }
 
 const TLACITKO_MALE =
@@ -112,10 +112,13 @@ export function EditacePlanu({ studentId, radky }: { studentId: string; radky: R
                       ? STAV_NAHRAVKY_POPISKY[p.nahravka.stav]
                       : (STAV_POLOZKY_POPISKY[p.stav] ?? p.stav)}
                     {p.nahravka && (
-                      <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">
+                      <a
+                        href={`/nahravka/${p.nahravka.id}`}
+                        className="mt-0.5 block text-xs text-zinc-500 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                      >
                         {p.nahravka.nazev ?? 'soubor'} · {formatujDatum(p.nahravka.datum)}
                         {p.nahravka.pokus > 1 ? ` · ${p.nahravka.pokus}. pokus` : ''}
-                      </span>
+                      </a>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">

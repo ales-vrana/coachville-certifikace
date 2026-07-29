@@ -1,6 +1,8 @@
 'use server'
 
+import { waitUntil } from '@vercel/functions'
 import { vyzadujRoli, type PrihlasenyProfil } from '@/lib/auth/over-roli'
+import { appUrl } from '@/lib/email/odesilatel'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const BUCKET = 'nahravky'
@@ -156,6 +158,15 @@ export async function potvrdUpload(vstup: {
     typ: 'konverze_mp3',
     payload: { recording_id: nahravka.id },
   })
+
+  // Zpracování se rozběhne hned po odpovědi (fire-and-forget); záchytnou
+  // sítí pro spadlé úlohy je Vercel Cron na /api/zpracuj.
+  waitUntil(
+    fetch(`${appUrl()}/api/zpracuj`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${process.env.CRON_SECRET ?? ''}` },
+    }).catch(() => {}),
+  )
 
   // Bez revalidatePath: stránky jsou dynamické (čtou cookies), čerstvá data
   // se načtou při návratu na přehled — a potvrzovací panel zůstane vidět.

@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const VEREJNE_CESTY = ['/prihlaseni', '/auth']
+// /api/zpracuj má vlastní ochranu Bearer tokenem (CRON_SECRET), session nemá
+const VEREJNE_CESTY = ['/prihlaseni', '/auth', '/api/zpracuj']
 
 /** Obnova Supabase session + přesměrování nepřihlášených na /prihlaseni. */
 export async function proxy(request: NextRequest) {

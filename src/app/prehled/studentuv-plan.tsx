@@ -28,10 +28,10 @@ export async function StudentuvPlan({ profileId }: { profileId: string }) {
 
   const { data: nahravky } = await admin
     .from('recordings')
-    .select('plan_item_id, nahrano_at, stav')
+    .select('id, plan_item_id, nahrano_at, stav')
     .eq('student_id', student.id)
     .order('nahrano_at', { ascending: false })
-  const posledniNahravka = new Map<string, { nahrano_at: string; stav: string }>()
+  const posledniNahravka = new Map<string, { id: string; nahrano_at: string; stav: string }>()
   for (const n of nahravky ?? []) {
     if (!posledniNahravka.has(n.plan_item_id)) posledniNahravka.set(n.plan_item_id, n)
   }
@@ -90,9 +90,17 @@ export async function StudentuvPlan({ profileId }: { profileId: string }) {
                   Nahrát nahrávku
                 </Link>
               ) : nahravka ? (
-                <p className="text-sm text-emerald-700 dark:text-emerald-400">
-                  Dodáno ✓ {formatujDatum(nahravka.nahrano_at.slice(0, 10))}
-                </p>
+                <div className="text-right">
+                  <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                    Dodáno ✓ {formatujDatum(nahravka.nahrano_at.slice(0, 10))}
+                  </p>
+                  <Link
+                    href={`/nahravka/${nahravka.id}`}
+                    className="text-sm text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  >
+                    Nahrávka, transkript a vyhodnocení
+                  </Link>
+                </div>
               ) : (
                 <p className="text-sm text-emerald-700 dark:text-emerald-400">Splněno ✓</p>
               )}

@@ -36,7 +36,7 @@ export default async function DetailStudentaPage({
 
   const { data: nahravky } = await admin
     .from('recordings')
-    .select('plan_item_id, nahrano_at, puvodni_nazev, stav, pokus')
+    .select('id, plan_item_id, nahrano_at, puvodni_nazev, stav, pokus')
     .eq('student_id', id)
     .order('nahrano_at', { ascending: false })
   const posledniNahravka = new Map<string, NonNullable<typeof nahravky>[number]>()
@@ -90,6 +90,7 @@ export default async function DetailStudentaPage({
             stav: p.stav,
             nahravka: nahravka
               ? {
+                  id: nahravka.id,
                   stav: nahravka.stav,
                   nazev: nahravka.puvodni_nazev,
                   datum: nahravka.nahrano_at.slice(0, 10),

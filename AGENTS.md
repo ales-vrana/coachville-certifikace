@@ -37,7 +37,11 @@ Webová aplikace pro správu a AI vyhodnocování koučovacích nahrávek studen
 - [ ] Supabase šablonu Magic Link přepnout na token_hash tvar: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email` (jinak odkaz nefunguje při otevření na jiném zařízení, než kde byl vyžádán)
 - [ ] Po zprovoznění domény přidat v Supabase (Auth → URL Configuration) Site URL `https://certifikace.coachville.eu` + redirect URL `…/auth/callback`
 - [ ] Vlastní SMTP přes Resend v Supabase Auth (vestavěný odesílatel má limit jednotky e-mailů/hod.)
-- [ ] Env proměnné nastavit i ve Vercelu (hodnoty z `.env.example`)
+- [ ] `RESEND_API_KEY` přidat i do Vercel env (zatím jen v `.env.local`; Supabase proměnné ve Vercelu jsou)
+
+## Stav infrastruktury (2026-07-29)
+
+Produkce běží: Vercel projekt `coachville-certifikace` (auto-deploy z main), doména certifikace.coachville.eu (CNAME ve Forpsi ✓, SSL ✓), Supabase env proměnné ve Vercelu ✓, Resend doména coachville.eu verified (eu-west-1) ✓. Admin účet: ales@zivotjakohra.cz. Přihlášení+odhlášení ověřeno E2E na produkci.
 
 ## Stav stavby
 

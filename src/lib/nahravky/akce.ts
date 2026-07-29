@@ -2,7 +2,9 @@
 
 import { waitUntil } from '@vercel/functions'
 import { vyzadujRoli, type PrihlasenyProfil } from '@/lib/auth/over-roli'
-import { appUrl } from '@/lib/email/odesilatel'
+import { appUrl, posliEmail } from '@/lib/email/odesilatel'
+import { uploadPotvrzeniEmail } from '@/lib/email/sablony'
+import { TYP_POLOZKY_POPISKY } from '@/lib/popisky'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const BUCKET = 'nahravky'
@@ -159,13 +161,33 @@ export async function potvrdUpload(vstup: {
     payload: { recording_id: nahravka.id },
   })
 
-  // Zpracování se rozběhne hned po odpovědi (fire-and-forget); záchytnou
-  // sítí pro spadlé úlohy je Vercel Cron na /api/zpracuj.
+  // Zpracování + potvrzovací e-mail se rozběhnou hned po odpovědi
+  // (fire-and-forget); záchytnou sítí je Vercel Cron na /api/zpracuj.
   waitUntil(
     fetch(`${appUrl()}/api/zpracuj`, {
       method: 'POST',
       headers: { authorization: `Bearer ${process.env.CRON_SECRET ?? ''}` },
     }).catch(() => {}),
+  )
+  waitUntil(
+    (async () => {
+      const [{ data: polozka }, { data: student }] = await Promise.all([
+        admin.from('plan_items').select('poradi, typ').eq('id', vstup.planItemId).single(),
+        admin.from('students').select('profiles(jmeno, email)').eq('id', studentId).single(),
+      ])
+      if (student?.profiles) {
+        await posliEmail({
+          komu: student.profiles.email,
+          predmet: 'Nahrávka přijata ✓',
+          html: uploadPotvrzeniEmail({
+            jmeno: student.profiles.jmeno,
+            polozka: polozka
+              ? `${polozka.poradi}. ${TYP_POLOZKY_POPISKY[polozka.typ]}`
+              : 'položka plánu',
+          }),
+        })
+      }
+    })().catch(() => {}),
   )
 
   // Bez revalidatePath: stránky jsou dynamické (čtou cookies), čerstvá data

@@ -1,4 +1,7 @@
 import 'server-only'
+import { appUrl, posliEmail } from '@/lib/email/odesilatel'
+import { vraceniEmail } from '@/lib/email/sablony'
+import { TYP_POLOZKY_POPISKY } from '@/lib/popisky'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Json } from '@/lib/supabase/database.types'
 import { formatujTranskript, oznacRole, prepisNahravku } from './transkripce'
@@ -68,7 +71,76 @@ export async function zpracujDalsiUlohu(): Promise<VysledekUlohy> {
         run_after: new Date(Date.now() + 2 ** pokusy * 60_000).toISOString(),
       })
       .eq('id', kandidat.id)
+
+    // F7: definitivně selhaná transkripce = technicky vadná nahrávka → vrácení
+    if (vycerpano && kandidat.typ === 'transkripce') {
+      await vratNahravku(
+        (kandidat.payload as { recording_id?: string }).recording_id,
+        zprava,
+      ).catch(() => {})
+    }
     return { zpracovano: true, jobId: kandidat.id, typ: kandidat.typ, chyba: zprava }
+  }
+}
+
+/**
+ * F7 + R18: vadnou nahrávku vrátí (nepočítá se), položku otevře pro nové
+ * nahrání, studentovi pošle e-mail; druhá a další oprava = evidence 1 000 Kč.
+ */
+async function vratNahravku(recordingId: string | undefined, duvod: string): Promise<void> {
+  if (!recordingId) return
+  const admin = createAdminClient()
+
+  const { data: nahravka } = await admin
+    .from('recordings')
+    .select('id, stav, pokus, student_id, plan_item_id')
+    .eq('id', recordingId)
+    .single()
+  if (!nahravka || nahravka.stav === 'vraceno') return
+
+  await admin
+    .from('recordings')
+    .update({ stav: 'vraceno', vraceno_duvod: duvod })
+    .eq('id', recordingId)
+  await admin
+    .from('plan_items')
+    .update({ stav: 'naplanovano' })
+    .eq('id', nahravka.plan_item_id)
+  await zapisUdalost(recordingId, 'vraceno', { duvod })
+
+  // první opravná zdarma; při vrácení 2.+ pokusu vzniká evidence 1 000 Kč (R18)
+  if (nahravka.pokus >= 2) {
+    await admin.from('payments').insert({
+      student_id: nahravka.student_id,
+      recording_id: recordingId,
+      plan_item_id: nahravka.plan_item_id,
+      typ: 'opravna_1000',
+      castka_kc: 1000,
+    })
+  }
+
+  const { data: polozka } = await admin
+    .from('plan_items')
+    .select('poradi, typ')
+    .eq('id', nahravka.plan_item_id)
+    .single()
+  const { data: student } = await admin
+    .from('students')
+    .select('profiles(jmeno, email)')
+    .eq('id', nahravka.student_id)
+    .single()
+  if (student?.profiles) {
+    await posliEmail({
+      komu: student.profiles.email,
+      predmet: 'Nahrávku je potřeba nahrát znovu',
+      html: vraceniEmail({
+        jmeno: student.profiles.jmeno,
+        polozka: polozka ? `${polozka.poradi}. ${TYP_POLOZKY_POPISKY[polozka.typ]}` : 'položka plánu',
+        duvod: 'soubor se nepodařilo přepsat na text',
+        prvniOprava: nahravka.pokus < 2,
+        odkazUrl: `${appUrl()}/nahrat/${nahravka.plan_item_id}`,
+      }),
+    })
   }
 }
 

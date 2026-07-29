@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { spustDenniKontrolu } from '@/lib/zpracovani/denni-kontrola'
 import { zpracujDalsiUlohu, type VysledekUlohy } from '@/lib/zpracovani/worker'
 
 // Zpracování fronty může trvat (stažení souboru + transkripce delší nahrávky)
@@ -24,13 +25,15 @@ async function zpracujFrontu(): Promise<VysledekUlohy[]> {
   return vysledky
 }
 
-/** Spouštěno po uploadu (waitUntil) a ručně; GET pro Vercel Cron. */
+/** Spouštěno po uploadu (waitUntil) a ručně — jen fronta úloh. */
 export async function POST(request: NextRequest) {
   if (!autorizovano(request)) return NextResponse.json({ chyba: 'unauthorized' }, { status: 401 })
   return NextResponse.json({ ulohy: await zpracujFrontu() })
 }
 
+/** Denní Vercel Cron: notifikační kaskáda (R20, R34, F6) + dojetí fronty. */
 export async function GET(request: NextRequest) {
   if (!autorizovano(request)) return NextResponse.json({ chyba: 'unauthorized' }, { status: 401 })
-  return NextResponse.json({ ulohy: await zpracujFrontu() })
+  const kontrola = await spustDenniKontrolu()
+  return NextResponse.json({ kontrola, ulohy: await zpracujFrontu() })
 }

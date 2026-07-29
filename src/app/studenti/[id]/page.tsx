@@ -8,6 +8,7 @@ import {
 } from '@/lib/popisky'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { EditacePlanu } from './editace-planu'
+import { PlatbySekce } from './platby'
 import { TlacitkoPoslatOdkaz } from './poslat-odkaz'
 
 export default async function DetailStudentaPage({
@@ -45,6 +46,12 @@ export default async function DetailStudentaPage({
   }
 
   const muzePosilatOdkaz = profil.role === 'meira' || profil.role === 'admin'
+
+  const { data: platby } = await admin
+    .from('payments')
+    .select('id, typ, castka_kc, stav, created_at, uhrazeno_at')
+    .eq('student_id', id)
+    .order('created_at', { ascending: false })
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
@@ -99,6 +106,18 @@ export default async function DetailStudentaPage({
               : undefined,
           }
         })}
+      />
+
+      <PlatbySekce
+        platby={(platby ?? []).map((p) => ({
+          id: p.id,
+          typ: p.typ,
+          castkaKc: p.castka_kc,
+          stav: p.stav,
+          vytvoreno: p.created_at,
+          uhrazeno: p.uhrazeno_at,
+        }))}
+        muzeOznacit={muzePosilatOdkaz}
       />
 
       {student.poznamky && (

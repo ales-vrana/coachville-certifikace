@@ -84,6 +84,17 @@ export default async function PrehledPage() {
                 </p>
               </Link>
             )}
+            {['verca', 'admin'].includes(profil.role) && (
+              <Link
+                href="/mentori"
+                className="rounded-2xl border border-zinc-200 p-5 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600"
+              >
+                <p className="font-medium text-zinc-900 dark:text-zinc-50">Mentoři</p>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  Vytížení, statistiky a Calendly pro plánování
+                </p>
+              </Link>
+            )}
             {profil.role === 'admin' && (
               <Link
                 href="/admin"
@@ -101,6 +112,20 @@ export default async function PrehledPage() {
 
       {profil.role === 'student' && <StudentuvPlan profileId={user.id} />}
       {profil.role === 'mentor' && <MentoruvPrehled profileId={user.id} />}
+
+      <footer className="mt-12 border-t border-zinc-200 pt-4 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+        <Link href="/jak-na-to" className="hover:underline">
+          Jak na to
+        </Link>
+        {' · '}
+        <Link href="/podminky" className="hover:underline">
+          Podmínky certifikace
+        </Link>
+        {' · '}
+        <a href="mailto:delivery@coachville.eu" className="hover:underline">
+          Podpora
+        </a>
+      </footer>
     </main>
   )
 }

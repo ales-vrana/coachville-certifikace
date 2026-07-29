@@ -53,7 +53,11 @@ Produkce běží: Vercel projekt `coachville-certifikace` (auto-deploy z main), 
 - **Upload limity:** Free tarif Supabase = max 50 MB na soubor (bucket i globální strop). Po přechodu na Pro zvednout limit bucketu (`updateBucket`) na ~500 MB. Obnovitelný přenos (TUS) zatím není — při výpadku se upload opakuje celý; zvážit `tus-js-client` ve fázi 2.
 - **Fronta zpracování:** `job_queue` se zatím jen plní; worker (konverze ffmpeg → transkripce → vyhodnocení) se teprve postaví — čeká na vzorové nahrávky a výběr transkripční služby (R37).
 - `src/lib/plan/akce.ts` + `editace-planu.tsx` na detailu studenta — editace plánů (R21, jen verca/meira/admin): posun termínu (s auditem `puvodni_termin`, vrací „po termínu" do plánu), „Splněno dříve" (migrace F1b, stav `splneno_historicky`), zrušení/obnovení položky (soft, stav `zruseno` — studentovi se neukazuje), přidání položky. Položky s nahrávkou editovat nejdou.
-- **Test transkripce (R37):** lokální Whisper large-v3-turbo (whisper.cpp, model v `~/.cache/whisper/`) na vzorcích v `Test-nahravky/` (gitignorováno — soukromé nahrávky, repo je veřejné!). Čeština výborná; slovenský vzorek a API test (Deepgram/ElevenLabs — diarizace!) zbývá.
+- **Test transkripce (R37), 2026-07-29 na 2 CZ vzorcích (`Test-nahravky/prepisy/`, gitignorováno — soukromé nahrávky, repo veřejné!):**
+  - **ElevenLabs Scribe: jasný vítěz.** Nejpřesnější čeština (lepší než Whisper large-v3-turbo), doslovný verbatim přepis (vsuvky, opakování, [smích] tagy — ideální pro hodnocení ICF kompetencí) a **bezchybná diarizace** včetně rychlých výměn u souhlasu klienta.
+  - Deepgram nova-3: rychlý a levný, ale česká přesnost výrazně horší (komoleniny, „ten"→„10") a diarizace lepí krátké repliky k druhému mluvčímu — nezachytí správně výměnu u souhlasu. Nepoužít.
+  - Whisper: dobrá přesnost, ale bez diarizace — jen fallback.
+  - Zbývá: slovenský vzorek, ověření cen/EU zpracování u ElevenLabs, potvrzení volby Alešem. Testovací skript: `scripts/test-transkripce.ts`.
 
 ## Konvence
 

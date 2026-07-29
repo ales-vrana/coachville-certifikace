@@ -31,6 +31,20 @@ export default async function AdminPage() {
         Master Prompty (verzované — uložením vzniká nová verze) a knihovna ICF standardů,
         která se vkládá do kontextu každého vyhodnocení.
       </p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Link
+          href="/admin/mentori"
+          className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >
+          Správa mentorů →
+        </Link>
+        <Link
+          href="/admin/nastaveni"
+          className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >
+          Nastavení a texty →
+        </Link>
+      </div>
 
       <AdminObsah prompty={prompty ?? []} standardy={standardy ?? []} />
     </main>

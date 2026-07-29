@@ -9,6 +9,7 @@ import {
 } from '@/lib/popisky'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ROLE_TITULKY, type Usek } from '@/lib/zpracovani/transkripce'
+import { AkcniPanel } from './akcni-panel'
 
 function formatujCas(sekundy: number): string {
   const m = Math.floor(sekundy / 60)
@@ -17,9 +18,10 @@ function formatujCas(sekundy: number): string {
 }
 
 export default async function NahravkaPage({ params }: { params: Promise<{ id: string }> }) {
-  const profil = await vyzadujRoli(['student', 'verca', 'meira', 'admin'])
+  const profil = await vyzadujRoli(['student', 'mentor', 'verca', 'meira', 'admin'])
   const { id } = await params
   const jeStudent = profil.role === 'student'
+  const jeMentor = profil.role === 'mentor'
 
   const admin = createAdminClient()
   const { data: nahravka } = await admin
@@ -35,6 +37,25 @@ export default async function NahravkaPage({ params }: { params: Promise<{ id: s
     .eq('id', nahravka.student_id)
     .single()
   if (jeStudent && student?.profile_id !== profil.id) redirect('/prehled')
+
+  // schůzka + kontrola vlastnictví pro mentora (vidí jen přiřazené — kap. 6)
+  const { data: schuzky } = await admin
+    .from('meetings')
+    .select('id, mentor_id, termin, stav')
+    .eq('recording_id', id)
+    .neq('stav', 'zrusena')
+    .limit(1)
+  const schuzka = schuzky?.[0] ?? null
+  let mentorVlastni = false
+  if (jeMentor) {
+    const { data: mentor } = await admin
+      .from('mentors')
+      .select('id')
+      .eq('profile_id', profil.id)
+      .single()
+    mentorVlastni = !!mentor && !!schuzka && schuzka.mentor_id === mentor.id
+    if (!mentorVlastni) redirect('/prehled')
+  }
 
   const { data: polozka } = await admin
     .from('plan_items')
@@ -57,6 +78,15 @@ export default async function NahravkaPage({ params }: { params: Promise<{ id: s
   // studentovi se vyhodnocení ukazuje až po odemknutí (R12)
   const reportProZobrazeni = report && (!jeStudent || report.stav === 'odemcen') ? report : null
 
+  // akční panely dle role a stavu
+  const panelSchvaleni =
+    ['verca', 'admin'].includes(profil.role) && nahravka.stav === 'ceka_na_schvaleni' && report
+  const panelMentora =
+    !!schuzka &&
+    ['ceka_na_mentora', 'schuzka_planovana'].includes(nahravka.stav) &&
+    (mentorVlastni || ['verca', 'admin'].includes(profil.role))
+  const muzeDokoncit = mentorVlastni || profil.role === 'admin'
+
   let audioUrl: string | null = null
   if (nahravka.puvodni_soubor_path) {
     const { data: podepsane } = await admin.storage
@@ -71,8 +101,11 @@ export default async function NahravkaPage({ params }: { params: Promise<{ id: s
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
       <nav className="text-sm text-zinc-500 dark:text-zinc-400">
-        <Link href={jeStudent ? '/prehled' : `/studenti/${nahravka.student_id}`} className="hover:underline">
-          ← Zpět {jeStudent ? 'na přehled' : 'na detail studenta'}
+        <Link
+          href={jeStudent || jeMentor ? '/prehled' : `/studenti/${nahravka.student_id}`}
+          className="hover:underline"
+        >
+          ← Zpět {jeStudent || jeMentor ? 'na přehled' : 'na detail studenta'}
         </Link>
       </nav>
 
@@ -90,8 +123,30 @@ export default async function NahravkaPage({ params }: { params: Promise<{ id: s
           odevzdáno {formatujDatum(nahravka.nahrano_at.slice(0, 10))}
           {nahravka.pokus > 1 ? ` · ${nahravka.pokus}. pokus` : ''} ·{' '}
           {STAV_NAHRAVKY_POPISKY[nahravka.stav] ?? nahravka.stav}
+          {schuzka?.termin
+            ? ` · schůzka ${new Date(schuzka.termin).toLocaleString('cs-CZ', { dateStyle: 'short', timeStyle: 'short' })}`
+            : ''}
         </p>
       </header>
+
+      {panelSchvaleni && (
+        <AkcniPanel
+          recordingId={nahravka.id}
+          rezim="schvaleni_kratke"
+          obsahReportu={report!.obsah}
+          terminSchuzky={null}
+          muzeDokoncit={false}
+        />
+      )}
+      {panelMentora && (
+        <AkcniPanel
+          recordingId={nahravka.id}
+          rezim="mentor_dlouha"
+          obsahReportu={report?.obsah ?? ''}
+          terminSchuzky={schuzka?.termin ?? null}
+          muzeDokoncit={muzeDokoncit}
+        />
+      )}
 
       {/* 1) Nahrávka */}
       <section className="mt-8">

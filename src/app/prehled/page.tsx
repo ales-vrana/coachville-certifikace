@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { ROLE_POPISKY } from '@/lib/popisky'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { MentoruvPrehled } from './mentoruv-prehled'
 import { StudentuvPlan } from './studentuv-plan'
 
 export default async function PrehledPage() {
@@ -72,6 +73,17 @@ export default async function PrehledPage() {
                 Seznam studentů, zakládání a plány dodávek
               </p>
             </Link>
+            {['verca', 'admin'].includes(profil.role) && (
+              <Link
+                href="/fronta"
+                className="rounded-2xl border border-zinc-200 p-5 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-600"
+              >
+                <p className="font-medium text-zinc-900 dark:text-zinc-50">Fronty a semafor</p>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  Přiřazování mentorů, schvalování reportů, neplniči
+                </p>
+              </Link>
+            )}
             {profil.role === 'admin' && (
               <Link
                 href="/admin"
@@ -87,16 +99,8 @@ export default async function PrehledPage() {
         </section>
       )}
 
-      {profil.role === 'student' ? (
-        <StudentuvPlan profileId={user.id} />
-      ) : (
-        <section className="mt-10 rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Další moduly (fronty, mentoři, reporty) se právě staví. První ostrá nahrávka: září
-            2026.
-          </p>
-        </section>
-      )}
+      {profil.role === 'student' && <StudentuvPlan profileId={user.id} />}
+      {profil.role === 'mentor' && <MentoruvPrehled profileId={user.id} />}
     </main>
   )
 }

@@ -22,6 +22,7 @@ export async function StudentuvPlan({ profileId }: { profileId: string }) {
     .from('plan_items')
     .select('id, poradi, typ, faze, termin, stav')
     .eq('student_id', student.id)
+    .neq('stav', 'zruseno')
     .order('poradi')
   if (!polozky?.length) return null
 

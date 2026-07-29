@@ -52,6 +52,8 @@ Produkce běží: Vercel projekt `coachville-certifikace` (auto-deploy z main), 
 - `src/lib/nahravky/akce.ts` + `/nahrat/[planItemId]` — upload nahrávek (F2): studentův plán na `/prehled`, signed upload URL → přímý XHR PUT do bucketu `nahravky` (progress bar), povinný checkbox souhlasu (R16), potvrzení založí `recordings` + event + přepne položku na `nahrano` + zařadí `konverze_mp3` do `job_queue`. Bucket zakládá `scripts/vytvor-bucket.ts`.
 - **Upload limity:** Free tarif Supabase = max 50 MB na soubor (bucket i globální strop). Po přechodu na Pro zvednout limit bucketu (`updateBucket`) na ~500 MB. Obnovitelný přenos (TUS) zatím není — při výpadku se upload opakuje celý; zvážit `tus-js-client` ve fázi 2.
 - **Fronta zpracování:** `job_queue` se zatím jen plní; worker (konverze ffmpeg → transkripce → vyhodnocení) se teprve postaví — čeká na vzorové nahrávky a výběr transkripční služby (R37).
+- `src/lib/plan/akce.ts` + `editace-planu.tsx` na detailu studenta — editace plánů (R21, jen verca/meira/admin): posun termínu (s auditem `puvodni_termin`, vrací „po termínu" do plánu), „Splněno dříve" (migrace F1b, stav `splneno_historicky`), zrušení/obnovení položky (soft, stav `zruseno` — studentovi se neukazuje), přidání položky. Položky s nahrávkou editovat nejdou.
+- **Test transkripce (R37):** lokální Whisper large-v3-turbo (whisper.cpp, model v `~/.cache/whisper/`) na vzorcích v `Test-nahravky/` (gitignorováno — soukromé nahrávky, repo je veřejné!). Čeština výborná; slovenský vzorek a API test (Deepgram/ElevenLabs — diarizace!) zbývá.
 
 ## Konvence
 

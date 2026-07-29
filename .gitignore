@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Supabase CLI (link artefakty)
+supabase/.temp/
+
+# vzor env je výjimka z .env*
+!.env.example

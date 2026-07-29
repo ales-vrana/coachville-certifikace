@@ -34,7 +34,13 @@ Webová aplikace pro správu a AI vyhodnocování koučovacích nahrávek studen
 
 ## TODO před ostrým provozem
 
+- [ ] **KRITICKÉ: Supabase Auth → URL Configuration** — Site URL `https://certifikace.coachville.eu` + redirect `…/auth/callback`; bez toho magic linky z formuláře na produkci míří na localhost
+- [ ] **Vercel env: ANTHROPIC_API_KEY** — bez něj produkce nevyhodnocuje (úlohy čekají)
+- [ ] Supabase Auth → SMTP přes Resend (vestavěný odesílatel má limit jednotek e-mailů/hod.)
+- [ ] Účty Verča + Meira (`scripts/zaloz-uzivatele.ts`), mentoři v `/admin/mentori`
+- [ ] Stripe Payment Link 500 Kč → `/admin/nastaveni`
 - [ ] **26. 11. 2026 vyprší Claude API klíč** — před tím datem vytvořit nový a vyměnit v `.env.local` i ve Vercelu
+- [ ] Známé mezery MVP: neměří se délka nahrávky (tolerance kap. 3 → potřebuje ffprobe krok), MP3 archiv odložen, TUS resumable ne, offsety kaskády R20 zatím v kódu (ne v nastavení), monitoring Sentry není (R23)
 
 - [ ] Supabase šablonu Magic Link přepnout na token_hash tvar: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email` (jinak odkaz nefunguje při otevření na jiném zařízení, než kde byl vyžádán)
 - [ ] Po zprovoznění domény přidat v Supabase (Auth → URL Configuration) Site URL `https://certifikace.coachville.eu` + redirect URL `…/auth/callback`
@@ -58,6 +64,8 @@ Produkce běží: Vercel projekt `coachville-certifikace` (auto-deploy z main), 
 - **AI vyhodnocení** (`src/lib/zpracovani/vyhodnoceni.ts`): Claude API (`claude-opus-5`, streaming, max_tokens 32000 — PCC prompt žádá vyčerpávající kontrolu markerů), system = aktivní Master Prompt + aktivní standardy z knihovny. Reporty: `obsah_ai` (original) + `obsah` (oficiální, mentor smí upravit — R32), stav `koncept`; dlouhá → `ceka_na_mentora`, krátká → `ceka_na_schvaleni`.
 - **Admin `/admin`** (jen admin): editor Master Promptů s verzováním (uložení = nová aktivní verze, možnost aktivovat starší) + knihovna ICF standardů (aktivní texty jdou do kontextu vyhodnocení). Seed dočasných promptů: `scripts/seed-prompty.ts`.
 - **Master-prompt/** (gitignorováno — know-how, repo veřejné): Alešův „PCC RECORDING MASTER PROMPT.pages" + extrakt (text vytažen z Pages IWA formátu, zkontrolovat!). Nahrán jako `dlouha` v2. Prompt odkazuje na ICF Score Sheet a Assessor Guidelines — ty patří do knihovny standardů (zatím prázdná, kap. 16 checklist).
+- **Provozní vrstva (kompletní MVP):** `/fronta` (verca/admin — přiřazování s vytížením, schvalování krátkých s editací, semafor), `/mentori` (statistiky + Calendly embedy pro Verču), mentorský panel na `/nahravka` (termín R33, úprava reportu R32, dokončení → odemčení + e-mail), `/admin/mentori` (CRUD, jen admin), `/admin/nastaveni` (Stripe odkaz + texty sekcí), `/jak-na-to` + `/podminky`, platby na detailu studenta (Meira označuje úhrady, 500 → návrat položky s termínem +14 d), `/studenti/import` (R36, `pripravMigracniPlan` s testy), denní kontrola `denni-kontrola.ts` (kaskáda R20, R34 à 7 dní, poplatky F6; GET /api/zpracuj = cron, POST = fronta). Vrácení nahrávky: finální selhání transkripce → `vraceno` + e-mail + evidence 1000 Kč od 2. pokusu.
+- **Bezpečnostní model:** každá server action začíná `vyzadujRoli`; ownership: student (profile_id), mentor (`overPristupMentora` přes meetings); `dangerouslySetInnerHTML` jediné — Calendly embed na `/mentori` (vkládá výhradně admin). E-maily eskapují uživatelské řetězce (`escapeHtml`).
 - `src/lib/plan/akce.ts` + `editace-planu.tsx` na detailu studenta — editace plánů (R21, jen verca/meira/admin): posun termínu (s auditem `puvodni_termin`, vrací „po termínu" do plánu), „Splněno dříve" (migrace F1b, stav `splneno_historicky`), zrušení/obnovení položky (soft, stav `zruseno` — studentovi se neukazuje), přidání položky. Položky s nahrávkou editovat nejdou.
 - **Test transkripce (R37), 2026-07-29 na 2 CZ vzorcích (`Test-nahravky/prepisy/`, gitignorováno — soukromé nahrávky, repo veřejné!):**
   - **ElevenLabs Scribe: jasný vítěz.** Nejpřesnější čeština (lepší než Whisper large-v3-turbo), doslovný verbatim přepis (vsuvky, opakování, [smích] tagy — ideální pro hodnocení ICF kompetencí) a **bezchybná diarizace** včetně rychlých výměn u souhlasu klienta.

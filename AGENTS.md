@@ -34,9 +34,9 @@ Webová aplikace pro správu a AI vyhodnocování koučovacích nahrávek studen
 
 ## TODO před ostrým provozem
 
-- [ ] **KRITICKÉ: Supabase Auth → URL Configuration** — Site URL `https://certifikace.coachville.eu` + redirect `…/auth/callback`; bez toho magic linky z formuláře na produkci míří na localhost
+- [x] Supabase Auth URL Configuration (Site URL produkce + redirecty vč. localhost) — ověřeno E2E 2026-07-29
+- [x] Šablona Magic Link → token_hash tvar + SMTP přes Resend — ověřeno E2E vč. cizího zařízení; formulář žádá bez PKCE (server action `posliMagicLink`)
 - [ ] **Vercel env: ANTHROPIC_API_KEY** — bez něj produkce nevyhodnocuje (úlohy čekají)
-- [ ] Supabase Auth → SMTP přes Resend (vestavěný odesílatel má limit jednotek e-mailů/hod.)
 - [ ] Účty Verča + Meira (`scripts/zaloz-uzivatele.ts`), mentoři v `/admin/mentori`
 - [ ] Stripe Payment Link 500 Kč → `/admin/nastaveni`
 - [ ] **26. 11. 2026 vyprší Claude API klíč** — před tím datem vytvořit nový a vyměnit v `.env.local` i ve Vercelu

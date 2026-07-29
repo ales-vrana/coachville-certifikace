@@ -27,12 +27,20 @@ export default async function StudentiPage() {
       <header className="mt-2 flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Studenti</h1>
         {muzeZakladat && (
-          <Link
-            href="/studenti/novy"
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-          >
-            + Založit studenta
-          </Link>
+          <span className="flex gap-2">
+            <Link
+              href="/studenti/import"
+              className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Import (migrace)
+            </Link>
+            <Link
+              href="/studenti/novy"
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              + Založit studenta
+            </Link>
+          </span>
         )}
       </header>
 

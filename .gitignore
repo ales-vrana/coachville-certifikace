@@ -45,3 +45,6 @@ supabase/.temp/
 
 # vzor env je výjimka z .env*
 !.env.example
+
+# Testovací nahrávky — NIKDY necommitovat (soukromé koučovací rozhovory, repo je veřejné)
+Test-nahravky/

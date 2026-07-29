@@ -34,6 +34,8 @@ Webová aplikace pro správu a AI vyhodnocování koučovacích nahrávek studen
 
 ## TODO před ostrým provozem
 
+- [ ] **26. 11. 2026 vyprší Claude API klíč** — před tím datem vytvořit nový a vyměnit v `.env.local` i ve Vercelu
+
 - [ ] Supabase šablonu Magic Link přepnout na token_hash tvar: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email` (jinak odkaz nefunguje při otevření na jiném zařízení, než kde byl vyžádán)
 - [ ] Po zprovoznění domény přidat v Supabase (Auth → URL Configuration) Site URL `https://certifikace.coachville.eu` + redirect URL `…/auth/callback`
 - [ ] Vlastní SMTP přes Resend v Supabase Auth (vestavěný odesílatel má limit jednotky e-mailů/hod.)

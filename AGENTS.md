@@ -26,6 +26,19 @@ Webová aplikace pro správu a AI vyhodnocování koučovacích nahrávek studen
 - `npm run lint` — ESLint
 - `npm test` — vitest (unit testy v `src/**/*.test.ts`)
 
+## Architektura přístupu k datům
+
+- **Klient do DB nesahá přímo.** RLS je deny-all; veškerá data tečou přes server (Server Components / Actions / Route Handlers) admin klientem (`src/lib/supabase/admin.ts`, `server-only`), autorizaci podle role hlídá aplikační kód. Publishable key slouží jen auth operacím.
+- **Auth:** magic link, `shouldCreateUser: false` (účty zakládá jen koordinátorka). Session drží cookies (`@supabase/ssr`), obnovu a ochranu tras dělá `src/proxy.ts` (Next 16: proxy, ne middleware). Ověření odkazu: `/auth/confirm` (token_hash, funguje napříč zařízeními) i `/auth/callback` (PKCE code z výchozí e-mail šablony).
+- **Seed admina:** `node --env-file=.env.local scripts/seed-admin.ts <email> "<Jméno>"`.
+
+## TODO před ostrým provozem
+
+- [ ] Supabase šablonu Magic Link přepnout na token_hash tvar: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email` (jinak odkaz nefunguje při otevření na jiném zařízení, než kde byl vyžádán)
+- [ ] Po zprovoznění domény přidat v Supabase (Auth → URL Configuration) Site URL `https://certifikace.coachville.eu` + redirect URL `…/auth/callback`
+- [ ] Vlastní SMTP přes Resend v Supabase Auth (vestavěný odesílatel má limit jednotky e-mailů/hod.)
+- [ ] Env proměnné nastavit i ve Vercelu (hodnoty z `.env.example`)
+
 ## Stav stavby
 
 - `supabase/migrations/0001_zakladni_schema.sql` — kompletní datový model dle kap. 10 + stavy dle kap. 7. RLS zapnuto bez policies (deny-all); policies dle matice kap. 6 přibudou při napojení Supabase Auth. Migrace se zatím nikam neaplikovala — Supabase projekt ještě neexistuje.

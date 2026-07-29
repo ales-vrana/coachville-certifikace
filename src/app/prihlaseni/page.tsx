@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { posliMagicLink } from '@/lib/auth/prihlaseni-akce'
 
 type Stav = 'formular' | 'odesilam' | 'odeslano'
 
@@ -15,25 +15,10 @@ export default function PrihlaseniPage() {
     setChyba(null)
     setStav('odesilam')
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        // Účty zakládá jen koordinátorka — neznámý e-mail se nesmí registrovat (R5, R22)
-        shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-
-    if (error) {
+    const vysledek = await posliMagicLink(email)
+    if (!vysledek.ok) {
       setStav('formular')
-      if (error.code === 'otp_disabled' || /signups not allowed/i.test(error.message)) {
-        setChyba('Tento e-mail v systému nemáme. Zkontrolujte překlepy, případně napište Verče.')
-      } else if (error.status === 429) {
-        setChyba('Příliš mnoho pokusů za sebou. Počkejte chvíli a zkuste to znovu.')
-      } else {
-        setChyba('Odkaz se nepodařilo odeslat. Zkuste to prosím za chvíli znovu.')
-      }
+      setChyba(vysledek.chyba ?? 'Odkaz se nepodařilo odeslat.')
       return
     }
     setStav('odeslano')

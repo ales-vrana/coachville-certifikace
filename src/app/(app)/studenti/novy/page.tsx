@@ -16,8 +16,8 @@ export default async function NovyStudentPage() {
         Založit studenta
       </h1>
       <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-        Systém vygeneruje individuální plán dodávek a pošle studentovi uvítací e-mail
-        s přihlašovacím odkazem.
+        Systém založí účet a pošle studentovi uvítací e-mail s přihlašovacím odkazem.
+        Plán termínů domluví Veronika a student ho potvrdí e-mailem.
       </p>
       <FormularNovehoStudenta />
     </main>

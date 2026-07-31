@@ -8,6 +8,7 @@ import {
 } from '@/lib/popisky'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { EditacePlanu } from './editace-planu'
+import { NavrhPlanu } from './navrh-planu'
 import { PlatbySekce } from './platby'
 import { TlacitkoPoslatOdkaz } from './poslat-odkaz'
 
@@ -23,7 +24,7 @@ export default async function DetailStudentaPage({
   const { data: student } = await admin
     .from('students')
     .select(
-      'id, program, datum_startu, cilove_datum_certifikace, stav, skupina, poznamky, profiles(jmeno, email)',
+      'id, program, datum_startu, cilove_datum_certifikace, stav, skupina, poznamky, delka_acc_mesicu, delka_celkem_mesicu, plan_navrh_odeslan_at, plan_potvrzen_at, profiles(jmeno, email)',
     )
     .eq('id', id)
     .single()
@@ -72,6 +73,11 @@ export default async function DetailStudentaPage({
           </p>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             Start {formatujDatum(student.datum_startu)}
+            {student.delka_acc_mesicu ? ` · ACC ${student.delka_acc_mesicu} měs.` : ''}
+            {student.delka_celkem_mesicu &&
+            student.delka_celkem_mesicu !== student.delka_acc_mesicu
+              ? ` · celkem ${student.delka_celkem_mesicu} měs.`
+              : ''}
             {student.cilove_datum_certifikace
               ? ` · cíl certifikace ${formatujDatum(student.cilove_datum_certifikace)}`
               : ''}{' '}
@@ -80,6 +86,21 @@ export default async function DetailStudentaPage({
         </div>
         {muzePosilatOdkaz && <TlacitkoPoslatOdkaz studentId={student.id} />}
       </header>
+
+      <NavrhPlanu
+        studentId={student.id}
+        program={student.program}
+        datumStartu={student.datum_startu}
+        delkaAcc={student.delka_acc_mesicu}
+        delkaCelkem={student.delka_celkem_mesicu}
+        navrhOdeslanAt={student.plan_navrh_odeslan_at}
+        potvrzenAt={student.plan_potvrzen_at}
+        planBezi={
+          (plan ?? []).some((p) => !['naplanovano', 'po_terminu', 'zruseno'].includes(p.stav)) ||
+          (nahravky ?? []).length > 0
+        }
+        smiNavrhovat={profil.role === 'verca' || profil.role === 'admin'}
+      />
 
       <h2 className="mt-10 text-lg font-medium text-zinc-900 dark:text-zinc-50">
         Plán dodávek {plan?.length ? `(${plan.length} položek)` : ''}

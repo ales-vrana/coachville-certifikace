@@ -35,15 +35,18 @@ async function overPolozkuProUpload(
     return { ok: false, chyba: 'K této položce už nahrávka existuje nebo ji nyní nelze nahrát.' }
   }
 
-  if (profil.role === 'student') {
-    const { data: student } = await admin
-      .from('students')
-      .select('id, profile_id')
-      .eq('id', polozka.student_id)
-      .single()
-    if (!student || student.profile_id !== profil.id) {
-      return { ok: false, chyba: 'Tato položka nepatří k vašemu plánu.' }
-    }
+  const { data: student } = await admin
+    .from('students')
+    .select('id, profile_id, plan_potvrzen_at')
+    .eq('id', polozka.student_id)
+    .single()
+  if (!student) return { ok: false, chyba: 'Student k položce nenalezen.' }
+  if (profil.role === 'student' && student.profile_id !== profil.id) {
+    return { ok: false, chyba: 'Tato položka nepatří k vašemu plánu.' }
+  }
+  // nahrávat lze až po potvrzení plánu studentem (use case návrhu plánu)
+  if (!student.plan_potvrzen_at) {
+    return { ok: false, chyba: 'Plán termínů zatím není potvrzený — nejdřív ho potvrďte.' }
   }
 
   return { ok: true, polozka: { planItemId: polozka.id, studentId: polozka.student_id } }

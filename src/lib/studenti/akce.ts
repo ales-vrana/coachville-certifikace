@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache'
 import { vyzadujRoli } from '@/lib/auth/over-roli'
 import { appUrl, posliEmail } from '@/lib/email/odesilatel'
 import { prihlasovaciEmail, uvitaciEmail } from '@/lib/email/sablony'
-import { generujPlan } from '@/lib/plan/generator'
 import type { Program } from '@/lib/plan/typy'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -15,7 +14,11 @@ export interface VysledekZalozeni {
   studentId?: string
 }
 
-/** F1 Onboarding (kap. 7 zadání): účet → profil → student → plán → uvítací e-mail. */
+/**
+ * F1 Onboarding (kap. 7 zadání): účet → profil → student → uvítací e-mail.
+ * Plán termínů se při založení negeneruje — vznikne až návrhem Veroniky po
+ * telefonátu se studentem a student ho potvrzuje e-mailem (use case návrhu plánu).
+ */
 export async function zalozStudenta(
   _predchozi: VysledekZalozeni | null,
   formData: FormData,
@@ -27,7 +30,6 @@ export async function zalozStudenta(
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const program = String(formData.get('program') ?? '') as Program
   const datumStartu = String(formData.get('datum_startu') ?? '')
-  const ciloveDatum = String(formData.get('cilove_datum') ?? '')
   const skupina = String(formData.get('skupina') ?? '').trim()
 
   if (!jmeno) return { ok: false, chyba: 'Vyplňte jméno a příjmení.' }
@@ -39,17 +41,6 @@ export async function zalozStudenta(
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(datumStartu)) {
     return { ok: false, chyba: 'Vyplňte datum startu.' }
-  }
-
-  let plan
-  try {
-    plan = generujPlan({
-      program,
-      datumStartu: new Date(datumStartu),
-      ciloveDatumCertifikace: ciloveDatum ? new Date(ciloveDatum) : undefined,
-    })
-  } catch (e) {
-    return { ok: false, chyba: e instanceof Error ? e.message : 'Plán se nepodařilo vygenerovat.' }
   }
 
   const { data: novy, error: chybaAuth } = await admin.auth.admin.createUser({
@@ -79,7 +70,6 @@ export async function zalozStudenta(
       profile_id: userId,
       program,
       datum_startu: datumStartu,
-      cilove_datum_certifikace: ciloveDatum || null,
       skupina: skupina || null,
     })
     .select('id')
@@ -91,22 +81,6 @@ export async function zalozStudenta(
       ok: false,
       chyba: `Studenta se nepodařilo uložit: ${chybaStudenta?.message ?? 'neznámá chyba'}`,
     }
-  }
-
-  const { error: chybaPlanu } = await admin.from('plan_items').insert(
-    plan.map((p) => ({
-      student_id: student.id,
-      poradi: p.poradi,
-      typ: p.typ,
-      faze: p.faze,
-      termin: p.termin.toISOString().slice(0, 10),
-    })),
-  )
-  if (chybaPlanu) {
-    await admin.from('students').delete().eq('id', student.id)
-    await admin.from('profiles').delete().eq('id', userId)
-    await smazAuth()
-    return { ok: false, chyba: `Plán se nepodařilo uložit: ${chybaPlanu.message}` }
   }
 
   let varovani: string | undefined
@@ -126,8 +100,6 @@ export async function zalozStudenta(
         jmeno,
         odkazUrl,
         prihlaseniUrl: `${appUrl()}/prihlaseni`,
-        pocetPolozek: plan.length,
-        prvniTermin: plan[0]!.termin,
       }),
     })
     if (!email_vysledek.ok) {

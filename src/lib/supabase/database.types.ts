@@ -664,7 +664,12 @@ export type Database = {
           cilove_datum_certifikace: string | null
           created_at: string
           datum_startu: string
+          delka_acc_mesicu: number | null
+          delka_celkem_mesicu: number | null
           id: string
+          plan_navrh_odeslan_at: string | null
+          plan_potvrzen_at: string | null
+          plan_potvrzeni_token: string | null
           poznamky: string | null
           profile_id: string
           program: Database["public"]["Enums"]["program_type"]
@@ -676,7 +681,12 @@ export type Database = {
           cilove_datum_certifikace?: string | null
           created_at?: string
           datum_startu: string
+          delka_acc_mesicu?: number | null
+          delka_celkem_mesicu?: number | null
           id?: string
+          plan_navrh_odeslan_at?: string | null
+          plan_potvrzen_at?: string | null
+          plan_potvrzeni_token?: string | null
           poznamky?: string | null
           profile_id: string
           program: Database["public"]["Enums"]["program_type"]
@@ -688,7 +698,12 @@ export type Database = {
           cilove_datum_certifikace?: string | null
           created_at?: string
           datum_startu?: string
+          delka_acc_mesicu?: number | null
+          delka_celkem_mesicu?: number | null
           id?: string
+          plan_navrh_odeslan_at?: string | null
+          plan_potvrzen_at?: string | null
+          plan_potvrzeni_token?: string | null
           poznamky?: string | null
           profile_id?: string
           program?: Database["public"]["Enums"]["program_type"]

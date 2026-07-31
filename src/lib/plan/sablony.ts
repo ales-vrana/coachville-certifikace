@@ -12,7 +12,7 @@ import type { Sablona, SablonovaPolozka } from './typy'
  * změna rozhodnutí nevyžaduje přestavbu (kap. 3, O1).
  */
 
-const ACC_FAZE: SablonovaPolozka[] = [
+export const ACC_FAZE: SablonovaPolozka[] = [
   { typ: 'kratka_s_reportem', faze: 'acc', mesic: 2 },
   { typ: 'dlouha', faze: 'acc', mesic: 4 },
   { typ: 'kratka_s_reportem', faze: 'acc', mesic: 5 },
@@ -23,7 +23,7 @@ const ACC_FAZE: SablonovaPolozka[] = [
   { typ: 'dlouha', faze: 'acc', mesic: 12 },
 ]
 
-const PCC_FAZE: SablonovaPolozka[] = [
+export const PCC_FAZE: SablonovaPolozka[] = [
   { typ: 'kratka_s_reportem', faze: 'pcc', mesic: 3 },
   { typ: 'dlouha', faze: 'pcc', mesic: 4 },
   { typ: 'dlouha', faze: 'pcc', mesic: 8 },

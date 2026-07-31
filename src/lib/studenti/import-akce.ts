@@ -99,6 +99,8 @@ export async function importujStudenty(
         datum_startu: dnesIso,
         skupina: skupina || 'migrace',
         poznamky: `Migrace: ${hotove} hotové dlouhé praktiky před zavedením systému.`,
+        // migrovaní studenti už plán domluvený mají — potvrzování se jich netýká
+        plan_potvrzen_at: new Date().toISOString(),
       })
       .select('id')
       .single()
@@ -130,7 +132,6 @@ export async function importujStudenty(
     // 3) uvítací e-mail s magic linkem (volitelně)
     let detail = `Plán: ${plan.filter((p) => p.stav === 'naplanovano').length} zbývajících položek.`
     if (poslatEmaily) {
-      const zbyva = plan.filter((p) => p.stav === 'naplanovano')
       const { data: odkaz } = await admin.auth.admin.generateLink({ type: 'magiclink', email })
       if (odkaz?.properties) {
         const odeslano = await posliEmail({
@@ -140,8 +141,6 @@ export async function importujStudenty(
             jmeno,
             odkazUrl: `${appUrl()}/auth/confirm?token_hash=${odkaz.properties.hashed_token}&type=magiclink`,
             prihlaseniUrl: `${appUrl()}/prihlaseni`,
-            pocetPolozek: zbyva.length,
-            prvniTermin: zbyva[0]?.termin ?? new Date(),
           }),
         })
         detail += odeslano.ok ? ' E-mail odeslán.' : ` E-mail selhal (${odeslano.chyba}).`

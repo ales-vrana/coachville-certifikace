@@ -1,4 +1,5 @@
-import { formatujDatum } from '@/lib/popisky'
+import type { Faze, TypPolozky } from '@/lib/plan/typy'
+import { FAZE_POPISKY, TYP_POLOZKY_POPISKY, formatujDatum } from '@/lib/popisky'
 
 function escapeHtml(text: string): string {
   return text
@@ -25,16 +26,64 @@ export function uvitaciEmail(vstup: {
   jmeno: string
   odkazUrl: string
   prihlaseniUrl: string
-  pocetPolozek: number
-  prvniTermin: Date
 }): string {
   return obal(`
   <h1 style="font-size: 20px; margin: 0 0 16px;">Vítejte, ${escapeHtml(vstup.jmeno)}!</h1>
   <p>Byl vám založen účet v systému, přes který budete odevzdávat koučovací nahrávky ke své certifikaci.</p>
-  <p>Váš individuální plán je připravený: čeká vás <strong>${vstup.pocetPolozek} nahrávek</strong> a první termín je <strong>${formatujDatum(vstup.prvniTermin)}</strong>. Všechny termíny uvidíte po přihlášení — systém vám je bude včas připomínat.</p>
+  <p>Váš individuální plán termínů s vámi domluví <strong>Veronika</strong> — po domluvě vám přijde zvláštním e-mailem návrh termínů, který jedním kliknutím potvrdíte. Do té doby v systému uvidíte, že se plán připravuje.</p>
   ${tlacitko(vstup.odkazUrl, 'Přihlásit se do systému')}
   <p style="font-size: 13px; color: #71717a;">Odkaz platí přibližně hodinu a je jednorázový. Pokud vyprší, nechte si na <a href="${vstup.prihlaseniUrl}">přihlašovací stránce</a> poslat nový — stačí zadat tento e-mail. Hesla nepoužíváme.</p>
   <p style="font-size: 13px; color: #71717a;">Jak to funguje: nahrávky pořizujete se souhlasem klienta namluveným na začátku nahrávky (klient neuvádí příjmení). Nahrávat můžete z počítače i mobilu, v jakémkoli formátu.</p>`)
+}
+
+export interface TerminSeznamu {
+  poradi: number
+  typ: TypPolozky
+  faze: Faze | null
+  /** ISO datum (yyyy-mm-dd) nebo Date */
+  termin: string | Date
+}
+
+/** Výpis termínů a typů nahrávek pro e-maily s plánem. */
+function seznamTerminuHtml(terminy: TerminSeznamu[]): string {
+  const radky = terminy
+    .map(
+      (t) => `<tr>
+      <td style="padding: 6px 12px 6px 0; color: #a1a1aa; white-space: nowrap;">${t.poradi}.</td>
+      <td style="padding: 6px 12px 6px 0; font-weight: 600; white-space: nowrap;">${formatujDatum(t.termin)}</td>
+      <td style="padding: 6px 0;">${TYP_POLOZKY_POPISKY[t.typ]}${t.faze ? ` <span style="color: #a1a1aa; font-size: 13px;">(${FAZE_POPISKY[t.faze]})</span>` : ''}</td>
+    </tr>`,
+    )
+    .join('')
+  return `<table style="margin: 16px 0; border-collapse: collapse; font-size: 14px; color: #18181b;">${radky}</table>`
+}
+
+/** Návrh plánu termínů — student ho potvrzuje tlačítkem (texty dle zadání Aleše). */
+export function navrhPlanuEmail(vstup: {
+  terminy: TerminSeznamu[]
+  potvrzeniUrl: string
+}): string {
+  return obal(`
+  <h1 style="font-size: 20px; margin: 0 0 16px;">Návrh plánu termínů pro nahrávky</h1>
+  <p>Ahoj, tady je přehled tvých termínů pro dodání nahrávek pro certifikaci. Tento plán zohlednil celkovou nastavenou délku studia.</p>
+  ${seznamTerminuHtml(vstup.terminy)}
+  <p>Stiskni tlačítko <strong>potvrdit plán</strong> a tím je tvůj plán stanoven napevno. Termíny si zapiš do svého kalendáře.</p>
+  ${tlacitko(vstup.potvrzeniUrl, 'Potvrdit plán')}
+  <p style="font-size: 13px; color: #71717a;">Pokud ti termíny nevyhovují, ozvi se Veronice — domluvíte jinou délku studia a přijde ti nový návrh (tím tento odkaz přestane platit).</p>`)
+}
+
+/** Potvrzený závazný plán (texty dle zadání Aleše). */
+export function zavaznyPlanEmail(vstup: {
+  terminy: TerminSeznamu[]
+  prehledUrl: string
+}): string {
+  return obal(`
+  <h1 style="font-size: 20px; margin: 0 0 16px;">Tvůj závazný plán termínů</h1>
+  <p>Ahoj, potvrzujeme, že toto je tvůj plán termínů pro poskytnutí nahrávek. Plán je závazný. Nastav si tyto termíny do kalendáře.</p>
+  <p>Nahrávku můžeš dodat i dříve než je termín. Nesmíš ji však dodat později. V případě pokud nedodržíš termín dodání, bude nutno rezervovat náhradní termín - poplatek <strong>500 Kč</strong> za každý náhradní termín.</p>
+  <p>Zde je seznam tvých termínů pro nahrávky:</p>
+  ${seznamTerminuHtml(vstup.terminy)}
+  ${tlacitko(vstup.prehledUrl, 'Otevřít můj přehled')}`)
 }
 
 export function prihlasovaciEmail(vstup: { jmeno: string; odkazUrl: string; prihlaseniUrl: string }): string {

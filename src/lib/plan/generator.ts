@@ -1,5 +1,5 @@
-import { SABLONY } from './sablony'
-import type { PolozkaPlanu, VstupPlanu } from './typy'
+import { ACC_FAZE, PCC_FAZE, SABLONY } from './sablony'
+import type { PolozkaPlanu, VstupPlanu, VstupPlanuZDelek } from './typy'
 
 const PRUMERNY_MESIC_DNI = 30.4375
 
@@ -65,5 +65,63 @@ export function generujPlan(vstup: VstupPlanu): PolozkaPlanu[] {
         vstup.ciloveDatumCertifikace && polozka.mesic === posledniMesic
           ? naUtcPulnoc(vstup.ciloveDatumCertifikace)
           : pridejMesice(start, polozka.mesic * scale),
+    }))
+}
+
+/** Povolené rozsahy délek studia v měsících (use case: telefonát Veroniky). */
+export const ROZSAHY_DELEK = {
+  acc: { min: 9, max: 36 },
+  pcc: { min: 18, max: 60 },
+} as const
+
+function overRozsah(hodnota: number | undefined, rozsah: { min: number; max: number }, popis: string): number {
+  if (hodnota === undefined || !Number.isFinite(hodnota) || !Number.isInteger(hodnota)) {
+    throw new Error(`Zadejte ${popis} v celých měsících.`)
+  }
+  if (hodnota < rozsah.min || hodnota > rozsah.max) {
+    throw new Error(`${popis[0]!.toUpperCase()}${popis.slice(1)} musí být ${rozsah.min}–${rozsah.max} měsíců.`)
+  }
+  return hodnota
+}
+
+/**
+ * Vygeneruje plán z domluvených délek v měsících od data startu:
+ * - acc: délka ACC fáze 9–36 měsíců (mřížka 12 měsíců se proporčně natáhne),
+ * - upgrade_pcc: celková délka PCC studia 18–60 měsíců,
+ * - komplet: délka ACC fáze 9–36 + celková délka 18–60; PCC fáze se rozvrhne
+ *   do zbytku mezi koncem ACC fáze a celkovou délkou.
+ * Poslední položka padne přesně na konec domluvené délky.
+ */
+export function generujPlanZDelek(vstup: VstupPlanuZDelek): PolozkaPlanu[] {
+  const start = naUtcPulnoc(vstup.datumStartu)
+
+  let rozlozeni: { typ: PolozkaPlanu['typ']; faze: PolozkaPlanu['faze']; mesicPlanu: number }[]
+
+  if (vstup.program === 'acc') {
+    const delka = overRozsah(vstup.delkaAccMesicu, ROZSAHY_DELEK.acc, 'délka studia ACC')
+    rozlozeni = ACC_FAZE.map((p) => ({ ...p, mesicPlanu: (p.mesic * delka) / 12 }))
+  } else if (vstup.program === 'upgrade_pcc') {
+    const delka = overRozsah(vstup.delkaCelkemMesicu, ROZSAHY_DELEK.pcc, 'délka studia PCC')
+    rozlozeni = PCC_FAZE.map((p) => ({ ...p, mesicPlanu: (p.mesic * delka) / 12 }))
+  } else {
+    const delkaAcc = overRozsah(vstup.delkaAccMesicu, ROZSAHY_DELEK.acc, 'délka ACC fáze')
+    const delkaCelkem = overRozsah(vstup.delkaCelkemMesicu, ROZSAHY_DELEK.pcc, 'celková délka studia')
+    if (delkaCelkem < delkaAcc + 3) {
+      throw new Error('Celková délka musí být aspoň o 3 měsíce delší než ACC fáze.')
+    }
+    const delkaPcc = delkaCelkem - delkaAcc
+    rozlozeni = [
+      ...ACC_FAZE.map((p) => ({ ...p, mesicPlanu: (p.mesic * delkaAcc) / 12 })),
+      ...PCC_FAZE.map((p) => ({ ...p, mesicPlanu: delkaAcc + (p.mesic * delkaPcc) / 12 })),
+    ]
+  }
+
+  return rozlozeni
+    .sort((a, b) => a.mesicPlanu - b.mesicPlanu)
+    .map((polozka, i) => ({
+      poradi: i + 1,
+      typ: polozka.typ,
+      faze: polozka.faze,
+      termin: pridejMesice(start, polozka.mesicPlanu),
     }))
 }

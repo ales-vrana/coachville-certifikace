@@ -14,8 +14,20 @@ export default async function StudentiPage() {
   const admin = createAdminClient()
   const { data: studenti } = await admin
     .from('students')
-    .select('id, program, datum_startu, cilove_datum_certifikace, stav, skupina, profiles(jmeno, email)')
+    .select(
+      'id, program, datum_startu, cilove_datum_certifikace, stav, skupina, plan_navrh_odeslan_at, plan_potvrzen_at, profiles(jmeno, email)',
+    )
     .order('created_at', { ascending: false })
+
+  function stavPlanu(s: { plan_navrh_odeslan_at: string | null; plan_potvrzen_at: string | null }) {
+    if (s.plan_potvrzen_at) {
+      return <span className="text-emerald-700 dark:text-emerald-400">potvrzen ✓</span>
+    }
+    if (s.plan_navrh_odeslan_at) {
+      return <span className="font-medium text-amber-700 dark:text-amber-400">čeká na potvrzení</span>
+    }
+    return <span className="text-zinc-400">nenavržen</span>
+  }
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
@@ -54,6 +66,7 @@ export default async function StudentiPage() {
                 <th className="px-4 py-3">Program</th>
                 <th className="px-4 py-3">Start</th>
                 <th className="px-4 py-3">Cíl</th>
+                <th className="px-4 py-3">Plán</th>
                 <th className="px-4 py-3">Stav</th>
               </tr>
             </thead>
@@ -71,6 +84,7 @@ export default async function StudentiPage() {
                   <td className="px-4 py-3">
                     {s.cilove_datum_certifikace ? formatujDatum(s.cilove_datum_certifikace) : '—'}
                   </td>
+                  <td className="px-4 py-3">{stavPlanu(s)}</td>
                   <td className="px-4 py-3">{STAV_STUDENTA_POPISKY[s.stav] ?? s.stav}</td>
                 </tr>
               ))}

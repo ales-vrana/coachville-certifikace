@@ -95,8 +95,13 @@ export async function spustDenniKontrolu(): Promise<VysledekKontroly> {
     .select('id, poradi, typ, termin, stav, student_id')
     .in('stav', ['naplanovano', 'po_terminu'])
   const studentIds = [...new Set((polozky ?? []).map((p) => p.student_id))]
+  // kaskáda běží jen u potvrzených plánů — návrh čekající na potvrzení se nepřipomíná
   const { data: studenti } = studentIds.length
-    ? await admin.from('students').select('id, profile_id, profiles(jmeno, email)').in('id', studentIds)
+    ? await admin
+        .from('students')
+        .select('id, profile_id, profiles(jmeno, email)')
+        .in('id', studentIds)
+        .not('plan_potvrzen_at', 'is', null)
     : { data: [] }
   const studentMap = new Map((studenti ?? []).map((s) => [s.id, s]))
 

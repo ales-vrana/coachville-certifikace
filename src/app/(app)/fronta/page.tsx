@@ -81,12 +81,7 @@ export default async function FrontaPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
-      <nav className="text-sm text-zinc-500 dark:text-zinc-400">
-        <Link href="/prehled" className="hover:underline">
-          ← Přehled
-        </Link>
-      </nav>
-      <h1 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
         Fronty a semafor
       </h1>
 

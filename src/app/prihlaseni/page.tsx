@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import { posliMagicLink } from '@/lib/auth/prihlaseni-akce'
 
@@ -25,14 +26,11 @@ export default function PrihlaseniPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-          CoachVille certifikace
-        </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Správa koučovacích nahrávek
-        </p>
+    <main className="flex flex-1 items-center justify-center bg-white px-4">
+      <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+        <Image src="/coachville-logo.png" alt="CoachVille" width={152} height={36} priority />
+        <h1 className="mt-4 text-xl font-semibold text-zinc-900">Certifikace</h1>
+        <p className="mt-1 text-sm text-zinc-500">Správa koučovacích nahrávek</p>
 
         {stav === 'odeslano' ? (
           <div className="mt-6 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">

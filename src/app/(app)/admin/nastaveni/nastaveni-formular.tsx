@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
+import { WysiwygEditor } from '@/components/editor/wysiwyg'
 import { ulozNastaveni, type KlicNastaveni } from '@/lib/admin/nastaveni-akce'
 
 const TEXTAREA_TRIDA =
@@ -12,7 +13,7 @@ function Pole(props: {
   popisek: string
   napoveda?: string
   vychozi: string
-  radku?: number
+  editor?: boolean
 }) {
   const router = useRouter()
   const [probiha, startTransition] = useTransition()
@@ -28,13 +29,8 @@ function Pole(props: {
             {props.napoveda}
           </span>
         )}
-        {props.radku ? (
-          <textarea
-            value={hodnota}
-            onChange={(e) => setHodnota(e.target.value)}
-            rows={props.radku}
-            className={TEXTAREA_TRIDA}
-          />
+        {props.editor ? (
+          <WysiwygEditor vychozi={props.vychozi} onChange={setHodnota} />
         ) : (
           <input
             value={hodnota}
@@ -81,16 +77,16 @@ export function NastaveniFormular(props: {
       <Pole
         klic="text_jak_na_to"
         popisek={'Text sekce „Jak na to"'}
-        napoveda="Návody pro studenty (nahrávání, formáty, souhlas klienta). Sekce unese i placeholder, videa doplníte později."
+        napoveda="Návody pro studenty (nahrávání, formáty, souhlas klienta). Tlačítkem ▶ Vimeo vložíte video přímo do textu."
         vychozi={props.jakNaTo}
-        radku={10}
+        editor
       />
       <Pole
         klic="text_podminky"
         popisek={'Text sekce „Podmínky certifikace"'}
         napoveda="Podmínky programu: povinnosti, tolerance délek, poplatky 500/1000 Kč, retence nahrávek."
         vychozi={props.podminky}
-        radku={10}
+        editor
       />
     </div>
   )

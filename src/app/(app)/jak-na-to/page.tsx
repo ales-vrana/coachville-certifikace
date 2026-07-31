@@ -1,4 +1,5 @@
 import { vyzadujRoli } from '@/lib/auth/over-roli'
+import { obsahKZobrazeni } from '@/lib/obsah'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export default async function JakNaToPage() {
@@ -11,9 +12,11 @@ export default async function JakNaToPage() {
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
       <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Jak na to</h1>
       {text ? (
-        <div className="mt-6 whitespace-pre-wrap text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-          {text}
-        </div>
+        <div
+          className="prose prose-zinc mt-6 max-w-none"
+          // obsah vkládá výhradně admin a při uložení i zde prochází sanitizací
+          dangerouslySetInnerHTML={{ __html: obsahKZobrazeni(text) }}
+        />
       ) : (
         <p className="mt-6 rounded-2xl border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
           Návody se připravují. Zatím platí: nahrávejte v jakémkoli formátu z počítače i mobilu,

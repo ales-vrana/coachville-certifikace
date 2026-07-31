@@ -1,7 +1,14 @@
 import Link from 'next/link'
 import { vyzadujRoli } from '@/lib/auth/over-roli'
+import { jeHtmlObsah, textNaHtml } from '@/lib/obsah'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NastaveniFormular } from './nastaveni-formular'
+
+/** Starší prostý text převedeme editoru na HTML odstavce. */
+function proEditor(ulozene: string): string {
+  if (!ulozene) return ''
+  return jeHtmlObsah(ulozene) ? ulozene : textNaHtml(ulozene)
+}
 
 export default async function NastaveniPage() {
   await vyzadujRoli(['admin'])
@@ -31,8 +38,8 @@ export default async function NastaveniPage() {
 
       <NastaveniFormular
         stripeLink={hodnoty.get('stripe_link_500') ?? ''}
-        jakNaTo={hodnoty.get('text_jak_na_to') ?? ''}
-        podminky={hodnoty.get('text_podminky') ?? ''}
+        jakNaTo={proEditor(hodnoty.get('text_jak_na_to') ?? '')}
+        podminky={proEditor(hodnoty.get('text_podminky') ?? '')}
       />
     </main>
   )

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { vyzadujRoli } from '@/lib/auth/over-roli'
+import { prevedNaBezpecneHtml } from '@/lib/obsah'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export interface VysledekAkce {
@@ -20,10 +21,18 @@ export async function ulozNastaveni(klic: KlicNastaveni, hodnota: string): Promi
     return { ok: false, chyba: 'Stripe odkaz musí začínat https://' }
   }
 
+  let ulozit = hodnota.trim()
+  if (klic === 'text_jak_na_to' || klic === 'text_podminky') {
+    // obsah z WYSIWYG editoru: serverová sanitizace (whitelist + jen Vimeo iframy)
+    ulozit = prevedNaBezpecneHtml(ulozit)
+    // prázdný dokument editoru („<p></p>") ukládáme jako prázdný text
+    if (!ulozit.replaceAll(/<p>\s*<\/p>|<br\s*\/?>/g, '').trim()) ulozit = ''
+  }
+
   const admin = createAdminClient()
   const { error } = await admin.from('settings').upsert({
     key: klic,
-    value: hodnota.trim(),
+    value: ulozit,
     updated_at: new Date().toISOString(),
     updated_by_profile_id: profil.id,
   })

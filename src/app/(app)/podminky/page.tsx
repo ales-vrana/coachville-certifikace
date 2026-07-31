@@ -1,4 +1,5 @@
 import { vyzadujRoli } from '@/lib/auth/over-roli'
+import { obsahKZobrazeni } from '@/lib/obsah'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export default async function PodminkyPage() {
@@ -13,9 +14,11 @@ export default async function PodminkyPage() {
         Podmínky certifikace
       </h1>
       {text ? (
-        <div className="mt-6 whitespace-pre-wrap text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-          {text}
-        </div>
+        <div
+          className="prose prose-zinc mt-6 max-w-none"
+          // obsah vkládá výhradně admin a při uložení i zde prochází sanitizací
+          dangerouslySetInnerHTML={{ __html: obsahKZobrazeni(text) }}
+        />
       ) : (
         <p className="mt-6 rounded-2xl border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
           Úplné znění podmínek se připravuje. Rámcově: dlouhá nahrávka 20–40 minut, krátká 10–15
